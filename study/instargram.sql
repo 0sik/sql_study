@@ -63,3 +63,47 @@ VALUES
 ;
 --comments 조회
 SELECT * FROM comments;
+
+--settings 테이블 생성
+CREATE TABLE settings(
+    id serial PRIMARY KEY, --PK
+    private BOOLEAN, --BOOLEAN :  참(true)/거짓(false)
+    adding_photos VARCHAR(15),
+    --FK : 개인설정 유저(1:1)
+    user_id INTEGER UNIQUE REFERENCES users(id)--FK:개인설정 유저
+);
+
+--settings 레코드 생성
+INSERT INTO
+    settings(private,adding_photos,user_id)
+VALUES
+    (FALSE,'MANUAL',1),--유저1
+    (FALSE,'AUTO',2),--유저2
+    (TRUE,'AUTO',3)--유저3
+;
+
+--settings 조회
+SELECT * FROM settings;
+
+--likes 테이블 생성
+CREATE TABLE likes(
+    id SERIAL PRIMARY KEY, --pk
+    user_id INTEGER REFERENCES users(id),--fk
+    photo_id INTEGER REFERENCES photos(id)--fk
+);
+
+--likes 레코드 생성
+INSERT INTO
+    likes(user_id,photo_id)
+VALUES
+    (1,1),
+    (2,1),
+    (1,2),
+    (2,2),
+    (3,2),
+    (1,3),
+    (3,3)
+;    
+
+--likse조회
+SELECT * FROM likes;
