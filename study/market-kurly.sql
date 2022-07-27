@@ -232,4 +232,142 @@ JOIN orders ON
 ;   
 
 
+--결제 방법별 결제횟수 조회
+SELECT
+    ptype   AS "결제 방법",
+    COUNT(ptype) AS "결제 횟수"
+FROM
+    payments
+GROUP BY
+    ptype
     
+--보관 타입별 상품 개수와 평균 가격 조회
+SELECT
+    ptype   AS "상품보관 타입",
+    COUNT(ptype) AS"상품 개수",
+    AVG(price)  AS"평균 가격"
+FROM
+    products
+GROUP BY
+    ptype
+;   
+
+--사용자 닉네임별 배송완료 주문수
+SELECT
+    users.nickname AS "사용자 닉네임",
+    COUNT(*)    AS "배송 완료 주문 수"
+FROM
+    users
+JOIN orders ON
+    orders.user_id = users.id
+        AND
+    orders.status = 'DELIVERED'
+GROUP BY
+    users.nickname
+;   
+
+--36000 이상인 결제 수단 조회!
+SELECT
+    ptype AS "결제 수단",
+    ROUND(AVG(amount),2) AS"평균 결제 금액"
+FROM
+    payments
+GROUP BY    
+    ptype
+HAVING -- 그룹 필터링 : 그룹화된 것들을 조건으로 선별
+    AVG(amount) >= 36000
+;    
+
+-- 상품 이름과 가격을 기준으로, 누적 판매정보(판매량, 매출)를 조회
+SELECT                                     -- 4
+  products.name                             AS "상품명",
+  products.price                            AS "가격",
+  SUM(order_details.count)                  AS "누적 판매량",
+  SUM(products.price * order_details.count) AS "누적 매출"
+FROM                                       -- 1
+  products
+LEFT JOIN order_details ON                 -- 2
+  order_details.product_id = products.id
+GROUP BY                                   -- 3
+  products.name,
+  products.price
+;
+
+--(a) 누적 매출이 35000원 이상인 상품
+SELECT                                     -- 4
+  products.name                             AS "상품명",
+  products.price                            AS "가격",
+  SUM(order_details.count)                  AS "누적 판매량",
+  SUM(products.price * order_details.count) AS "누적 매출"
+FROM                                       -- 1
+  products
+LEFT JOIN order_details ON                 -- 2
+  order_details.product_id = products.id
+GROUP BY                                   -- 3
+  products.name,
+  products.price
+HAVING
+    --누적 매출이 35000 이상인 것
+    SUM(products.price*order_details.count) >= 35000
+;
+
+--누적 매출이 2만원 이상이면서, 누적 판매량도 10개 이상인 상품을 조회
+SELECT                                     -- 4
+  products.name                             AS "상품명",
+  products.price                            AS "가격",
+  SUM(order_details.count)                  AS "누적 판매량",
+  SUM(products.price * order_details.count) AS "누적 매출"
+FROM                                       -- 1
+  products
+LEFT JOIN order_details ON                 -- 2
+  order_details.product_id = products.id
+GROUP BY                                   -- 3
+  products.name,
+  products.price
+HAVING
+    --누적 매출이 20000 이상인 것
+    SUM(products.price*order_details.count) >= 20000
+        AND
+   --누적 판매량도 10개 이상 
+    SUM(order_details.count) >= 10
+;
+
+--누적 매출이 없는 제품을, 가격을 기준으로 오름차순 정렬하여 조회하시오
+SELECT                                     -- 4
+  products.name                             AS "상품명",
+  products.price                            AS "가격",
+  SUM(order_details.count)                  AS "누적 판매량",
+  SUM(products.price * order_details.count) AS "누적 매출"
+FROM                                       -- 1
+  products
+LEFT JOIN order_details ON                 -- 2
+  order_details.product_id = products.id
+GROUP BY                                   -- 3
+  products.name,
+  products.price
+HAVING
+    SUM(products.price*order_details.count) IS NULL
+ORDER BY
+    products.price ASC --오름차순
+;
+
+--누적 매출 상위 5개 상품을 조회하시오
+SELECT                                     -- 4
+  products.name                             AS "상품명",
+  products.price                            AS "가격",
+  SUM(order_details.count)                  AS "누적 판매량",
+  SUM(products.price * order_details.count) AS "누적 매출"
+FROM                                       -- 1
+  products
+LEFT JOIN order_details ON                 -- 2
+  order_details.product_id = products.id
+GROUP BY                                   -- 3
+  products.name,
+  products.price
+HAVING  
+    SUM(products.price*order_details.count) IS NOT NULL
+ORDER BY    
+    "누적 매출" DESC --내림차순
+LIMIT
+    5
+;
